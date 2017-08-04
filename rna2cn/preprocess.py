@@ -100,7 +100,7 @@ def log1p_mean(x, n, y):
        have been log(x+1) transformed so handle taking 
        their mean'''
     return np.log2(1 + (n*(2**x-1) + 2**y-1)/(n+1))
-    
+
 def load_expression(path, window, accumulate, seq_dict):
     '''Load the table of expression data per gene
        and bin it'''
@@ -176,8 +176,9 @@ def subseq(X, seq_len, ws, seq_dict):
     
 def preprocess_command(argv):
     args = getargs(argv)
-    
+    print("Called arguments" + str(args))
     print("Loading chromosome lengths")
+    
     # Chromosome lengths
     seq_dict = load_dict(args.reference)
     
@@ -242,4 +243,4 @@ def preprocess_command(argv):
     # Dump output
     print("Writing output to " + args.output)
     with open(args.output, 'wb') as f:
-        pickle.dump([X, X_mask, Y, Y_mask, chr_breaks, np.cumsum([np.ceil(seq_dict[c]/args.window) for c in chromosomes])], f)
+        pickle.dump([X, X_mask, Y, Y_mask, chr_breaks, np.cumsum([np.ceil(seq_dict[c]/args.window) for c in chromosomes])], args, f)

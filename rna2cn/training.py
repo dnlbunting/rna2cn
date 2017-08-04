@@ -145,7 +145,7 @@ def train_command(argv):
     args = parser.parse_args(argv)        
     
     with open(args.data, 'rb') as f:
-        X, X_mask, Y, Y_mask, chr_steps, chr_boundaries = pickle.load(f)
+        X, X_mask, Y, Y_mask, chr_steps, chr_boundaries, _ = pickle.load(f)
                   
     with open(args.model, 'r') as f:
         model = model_from_json(f.read())
