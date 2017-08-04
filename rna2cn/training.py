@@ -18,7 +18,6 @@ from keras.models import Sequential, model_from_json
 from keras.layers import LSTM, Dense, Masking, Dropout, Conv1D, Activation, Input, Permute, Reshape
 from keras.layers.wrappers import Bidirectional, TimeDistributed
 
-
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -141,6 +140,8 @@ def train_command(argv):
                         help='Serialised model json to train', default=None)
     parser.add_argument('--output', required=True,
                         help='Folder to dump jsons of trained models to', default=None)
+    parser.add_argument('--lr', required=False, type=float
+                        help='RMSProp learning rate', default=0.01)
     args = parser.parse_args(argv)        
     
     with open(args.data, 'rb') as f:
@@ -151,8 +152,8 @@ def train_command(argv):
     print("Loaded model from file " + args.model)
     print(model.summary())
 
-    model.compile(loss='mse',
-                  optimizer='adam',
+    model.compile(loss='accuracy',
+                  optimizer=keras.optimizers.RMSprop(lr=args.lr),
                   metrics=['accuracy', 'mse'])
     model.history = []
     
