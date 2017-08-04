@@ -142,7 +142,7 @@ def train_command(argv):
                         help='Serialised model json to train', default=None)
     parser.add_argument('--output', required=True,
                         help='Folder to dump jsons of trained models to', default=None)
-    parser.add_argument('--lr', required=False, type=float
+    parser.add_argument('--lr', required=False, type=float,
                         help='RMSProp learning rate', default=0.01)
     args = parser.parse_args(argv)        
     
