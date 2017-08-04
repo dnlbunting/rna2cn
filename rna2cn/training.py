@@ -125,7 +125,9 @@ def train(model, n_epochs, X_train, Y_train, X_test, Y_test, chr_steps, out_dir)
             print("Saving model state to file " + os.path.join(out_dir, "epoch"+str(epoch+1)+".json"))
             model.save_weights(os.path.join(out_dir, "epoch"+str(epoch+1)+".hd5"))
             plotLearning(model, os.path.join(out_dir, "learningcurve.pdf"))
-            
+            with open(os.path.join(out_dir, "history.pickle"), 'w'):
+                pickle.dump(model.history, f)
+                
     return model
 
 def train_command(argv):
