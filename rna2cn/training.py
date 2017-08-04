@@ -154,7 +154,7 @@ def train_command(argv):
     print("Loaded model from file " + args.model)
     print(model.summary())
 
-    model.compile(loss='accuracy',
+    model.compile(loss='categorical_crossentropy',
                   optimizer=keras.optimizers.RMSprop(lr=args.lr),
                   metrics=['accuracy', 'mse'])
     model.history = []
