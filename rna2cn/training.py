@@ -1,8 +1,3 @@
-import os
-os.environ['KERAS_BACKEND'] = 'theano'
-os.environ['OMP_NUM_THREADS'] = '1'
-os.environ['THEANO_FLAGS'] = "openmp=False"
-
 import matplotlib
 matplotlib.use('Agg')
 

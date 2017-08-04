@@ -2,6 +2,12 @@ import sys
 import pickle
 import argparse
 
+import os
+os.environ['KERAS_BACKEND'] = 'theano'
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['THEANO_FLAGS'] = "openmp=False"
+
+
 def main():
     main_parser = argparse.ArgumentParser(prog='RNA2CN')
     main_parser.add_argument('command', choices=['train', 'preprocess', 'predict', 'evaluate'])
