@@ -255,7 +255,11 @@ def preprocess_command(argv):
     else:
         Y = None
 
+    # Train-Test split
+    train_cells = np.random.choice(range(len(X)), int(X.shape[0] * (1 - test_frac)), replace=False)
+    chr_boundaries = np.cumsum([np.ceil(seq_dict[c] / args.window) for c in chromosomes])
+
     # Dump output
     print("Writing output to " + args.output)
     with open(args.output, 'wb') as f:
-        pickle.dump([X, Y, mask, chr_breaks, np.cumsum([np.ceil(seq_dict[c] / args.window) for c in chromosomes]), args], f)
+        pickle.dump([X, Y, mask, train_cells, chr_breaks, chr_boundaries, args], f)

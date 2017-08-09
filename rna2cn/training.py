@@ -24,8 +24,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 
-# TODO : STORE test_cells to pass on to downstream evaluations
-
 sns.set_style('whitegrid')
 chromosomes = list(map(str, range(1, 23)))  # + ['X']
 
@@ -78,10 +76,9 @@ def evaluateChr(model, X, Y, chr_steps):
     return np.array(eval)
 
 
-def makedata(X, Y, test_frac):
+def makedata(X, Y, train_cells):
     '''Split X,Y cellwise into train and test sets,
        returns (X_train, Y_train, X_test, Y_test, test_cells)'''
-    train_cells = np.random.choice(range(len(X)), int(X.shape[0] * (1 - test_frac)), replace=False)
     test_cells = np.array([x for x in range(len(X)) if x not in train_cells])
 
     X_train, Y_train = X[train_cells], Y[train_cells]
@@ -151,7 +148,7 @@ def train_command(argv):
     args = getargs(argv)
 
     with open(args.data, 'rb') as f:
-        X, Y, mask, chr_steps, chr_boundaries, _ = pickle.load(f)
+        X, Y, mask, train_cells, chr_steps, chr_boundaries, _ = pickle.load(f)
 
     with open(args.model, 'r') as f:
         model = model_from_json(f.read())
@@ -163,5 +160,5 @@ def train_command(argv):
                   metrics=['accuracy', 'mse'])
     model.history = []
 
-    *data, test_cells = makedata(X, Y, test_frac=0.25)
+    *data, test_cells = makedata(X, Y, train_cells)
     train(model, args.epochs, *data, chr_steps, out_dir=args.output)

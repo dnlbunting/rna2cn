@@ -67,6 +67,17 @@ def get_singletons(y):
     return np.array(singletons)
 
 
+def makedata(X, Y, train_cells):
+    '''Split X,Y cellwise into train and test sets,
+       returns (X_train, Y_train, X_test, Y_test, test_cells)'''
+    test_cells = np.array([x for x in range(len(X)) if x not in train_cells])
+
+    X_train, Y_train = X[train_cells], Y[train_cells]
+    X_test, Y_test = X[test_cells], Y[test_cells]
+
+    return X_train, Y_train, X_test, Y_test, test_cells
+
+
 def evaluate_command(argv):
     args = getargs(argv)
 
@@ -79,7 +90,7 @@ def evaluate_command(argv):
     print("Loaded weights from " + args.weights)
 
     with open(args.data, 'rb') as f:
-        X, Y_oh, mask, chr_steps, chr_boundaries, _ = pickle.load(f)
+        X, Y_oh, mask, train_cells, chr_steps, chr_boundaries, _ = pickle.load(f)
 
     n_cells, n_points, n_outputs = Y_oh.shape[0], Y_oh.shape[2], Y_oh.shape[-1]
     n_features = X.shape[-1]
