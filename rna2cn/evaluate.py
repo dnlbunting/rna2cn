@@ -79,18 +79,18 @@ def evaluate_command(argv):
     print("Loaded weights from " + args.weights)
 
     with open(args.data, 'rb') as f:
-        X, X_mask, Y_oh, Y_mask, chr_steps, chr_boundaries, _ = pickle.load(f)
+        X, Y_oh, mask, chr_steps, chr_boundaries, _ = pickle.load(f)
 
     n_cells, n_points, n_outputs = Y_oh.shape[0], Y_oh.shape[2], Y_oh.shape[-1]
     n_features = X.shape[-1]
-    Y = Y_oh.argmax(axis=-1)[:, Y_mask].reshape((n_cells, -1))  # Y comes in one hot categorical encoding
+    Y = Y_oh.argmax(axis=-1)[:, mask].reshape((n_cells, -1))  # Y comes in one hot categorical encoding
 
     pred = predict(model, X, chr_steps, n_outputs)
-    yhat = pred.argmax(axis=-1)[:, Y_mask].reshape((n_cells, -1))
+    yhat = pred.argmax(axis=-1)[:, mask].reshape((n_cells, -1))
 
     # Probability of there being a CN != 2 event at this site
-    event_Y = np.where(Y_oh[..., 2], 0, 1)[:, Y_mask]
-    event_p = 1 - pred[:, Y_mask, 2].reshape((n_cells, -1))
+    event_Y = np.where(Y_oh[..., 2], 0, 1)[:, mask]
+    event_p = 1 - pred[:, mask, 2].reshape((n_cells, -1))
 
     metrics = {k: None for k in args.metrics.split(',')}
 
@@ -105,7 +105,7 @@ def evaluate_command(argv):
     if 'breakpoints' in metrics.keys():
         dist = int(0.1 * yhat.shape[1])
         metrics['n_breakpoints'] = np.array([len(get_breakpoints(y)) for y in yhat])
-        #metrics['concordant_breakpoints'] = np.mean([np.abs(get_breakpoints(yh) - get_breakpoints(y)) < dist for yh, y in zip(yhat, Y)])
+        # metrics['concordant_breakpoints'] = np.mean([np.abs(get_breakpoints(yh) - get_breakpoints(y)) < dist for yh, y in zip(yhat, Y)])
         metrics['singletons'] = np.array([len(get_singletons(y)) for y in yhat])
     print(metrics)
 
@@ -142,9 +142,9 @@ def evaluate_command(argv):
                 ########## Subplot 1 #############
                 ax1 = plt.subplot2grid(gridspec, (0, 0), rowspan=1)
                 for j in range(n_outputs):
-                    ax1.plot(Y_oh[i, Y_mask, j].reshape((-1)), 's', linewidth=10)
+                    ax1.plot(Y_oh[i, mask, j].reshape((-1)), 's', linewidth=10)
                 ax1.set_ylim((0.95, 1.05))
-                ax1.set_xlim((0, Y_mask.sum()))
+                ax1.set_xlim((0, mask.sum()))
                 ax1.set_ylabel("Y", rotation=0, va='center')
                 ax1.get_yaxis().set_label_coords(-0.05, 0.5)
                 ax1.tick_params(which='both', bottom='off', left='off', labelbottom='off', labelleft='off')
@@ -158,10 +158,10 @@ def evaluate_command(argv):
                 ########## Subplot 2 #############
                 ax2 = plt.subplot2grid(gridspec, (1, 0), rowspan=6)
                 for j in range(n_outputs):
-                    ax2.plot(pred[i, Y_mask, j].reshape((-1)), label=str(j))
+                    ax2.plot(pred[i, mask, j].reshape((-1)), label=str(j))
                 ax2.vlines(chr_boundaries, 0, 1, linestyle='dashed', color='gray')
                 ax2.set_ylim((0, 1))
-                ax2.set_xlim((0, Y_mask.sum()))
+                ax2.set_xlim((0, mask.sum()))
                 ax2.set_ylabel("Pr(CN)")
                 ax2.get_yaxis().set_label_coords(-0.05, 0.5)
                 ax2.set_yticks([0, 0.5, 1])
@@ -172,14 +172,14 @@ def evaluate_command(argv):
                 ########## Subplot 3 #############
                 ax3 = plt.subplot2grid(gridspec, (7, 0), rowspan=6)
                 for j in range(n_outputs):
-                    ax3.fill_between(range(Y_mask.sum()), j-0.15, j+0.15, where=yhat[i] == j, alpha=0.75)
+                    ax3.fill_between(range(mask.sum()), j-0.15, j+0.15, where=yhat[i] == j, alpha=0.75)
                 ax3.plot(Y[i], '.', color='black', ms=1)
                 #ax3.plot(yhat[i], '.', color='red', ms=1)
                 ax3.set_ylabel("Copy number")
                 ax3.get_yaxis().set_label_coords(-0.05, 0.5)
                 ax3.vlines(chr_boundaries, 0, 5, linestyle='dashed', color='gray')
                 ax3.set_ylim((0, n_outputs - 1))
-                ax3.set_xlim((0, Y_mask.sum()))
+                ax3.set_xlim((0, mask.sum()))
                 ax3.set_yticks([1, 2, 3, 4])
                 ax3.set_yticklabels(['1', '2', '3', '4'])
                 ax3.tick_params(which='both', bottom='off', labelbottom='off')
@@ -188,11 +188,11 @@ def evaluate_command(argv):
                 ########## Subplot 4#############
                 ax4 = plt.subplot2grid(gridspec, (13, 0), rowspan=6)
                 ax4.plot(event_p[i], color='black')
-                ax4.fill_between(range(Y_mask.sum()), 0, 1, where=event_Y[i] == 1, alpha=0.25)
+                ax4.fill_between(range(mask.sum()), 0, 1, where=event_Y[i] == 1, alpha=0.25)
                 ax4.vlines(chr_boundaries, 0, 1, linestyle='dashed', color='gray')
                 ax4.set_ylabel("Pr(Event)")
                 ax4.get_yaxis().set_label_coords(-0.05, 0.5)
-                ax4.set_xlim((0, Y_mask.sum()))
+                ax4.set_xlim((0, mask.sum()))
                 ax4.set_yticks([0, 0.5, 1])
                 ax4.set_yticklabels(['0', '0.5', '1'])
                 ax4.grid(b=False, axis='x')
@@ -214,8 +214,8 @@ def evaluate_command(argv):
 
                 for j in range(n_features):
                     ax = plt.subplot(100*n_outputs + 10 + j + 1)
-                    ax.plot(X[i, X_mask, j].reshape((-1)), drawstyle='steps-mid')
-                    ax.set_xlim((0, Y_mask.sum()))
+                    ax.plot(X[i, mask, j].reshape((-1)), drawstyle='steps-mid')
+                    ax.set_xlim((0, mask.sum()))
                     ax.vlines(chr_boundaries, 0, 1, linestyle='dashed', color='gray')
                     ax.tick_params(which='both', bottom='off', left='off', labelbottom='off', labelleft='off')
                 pdf.savefig()

@@ -240,7 +240,7 @@ def preprocess_command(argv):
     # End building up the feature matrix
 
     # Divide up and pad chromosomes
-    X, X_mask, chr_breaks = subseq(X, args.truncation, args.window, seq_dict)
+    X, mask, chr_breaks = subseq(X, args.truncation, args.window, seq_dict)
 
     # Target CNV profiles
     if args.copy_number is not None:
@@ -250,12 +250,12 @@ def preprocess_command(argv):
         Y = np.concatenate([load_CN(files[k], args.window, seq_dict)
                             for k in samples], axis=0)
         Y = to_categorical(Y, 6).reshape((*Y.shape, 6))
-        Y, Y_mask, _ = subseq(Y, args.truncation, args.window, seq_dict)
+        Y, _, _ = subseq(Y, args.truncation, args.window, seq_dict)
 
     else:
-        Y, Y_mask = None, None
+        Y = None
 
     # Dump output
     print("Writing output to " + args.output)
     with open(args.output, 'wb') as f:
-        pickle.dump([X, X_mask, Y, Y_mask, chr_breaks, np.cumsum([np.ceil(seq_dict[c] / args.window) for c in chromosomes]), args], f)
+        pickle.dump([X, Y, mask, chr_breaks, np.cumsum([np.ceil(seq_dict[c] / args.window) for c in chromosomes]), args], f)
