@@ -23,6 +23,9 @@ from keras.layers.wrappers import Bidirectional, TimeDistributed
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+
+# TODO : STORE test_cells to pass on to downstream evaluations
+
 sns.set_style('whitegrid')
 chromosomes = list(map(str, range(1, 23)))  # + ['X']
 
@@ -73,19 +76,6 @@ def evaluateChr(model, X, Y, chr_steps):
             c_eval.append(np.mean([model.evaluate(X[s:s + 1, chroffset[i] + j], Y[s:s + 1, chroffset[i] + j], verbose=0, batch_size=1) for j in range(chr_steps[i])], axis=0))
         eval.append(c_eval)
     return np.array(eval)
-
-
-def predict(model, X, chr_steps, n_out=6):
-    chroffset = [0] + list(np.cumsum(chr_steps))
-    pred = np.zeros((*X.shape[:-1], n_out))
-    for s in range(X.shape[0]):
-        for i, chr in list(enumerate(chromosomes)):
-            model.reset_states()
-            for j in range(chr_steps[i]):
-                x = X[s:s + 1, chroffset[i] + j]
-                y = Y[s:s + 1, chroffset[i] + j]
-                pred[s, chroffset[i] + j] = model.predict(x, verbose=0, batch_size=1)
-    return pred
 
 
 def makedata(X, Y, test_frac):
