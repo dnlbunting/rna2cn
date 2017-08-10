@@ -65,6 +65,8 @@ def getargs(argv):
                         help='The number of windows used for the a single TBPTT pass')
     parser.add_argument('--output', required=True)
 
+    parser.add_argument('--test-frac', required=False, type=float,
+                        default=0.33, help='Fraction of cells to use for testing')
     parser.add_argument('--tumour', required=False, default=None,
                         help='Input tumour RNA matrix')
     parser.add_argument('--normalisation',
@@ -256,7 +258,7 @@ def preprocess_command(argv):
         Y = None
 
     # Train-Test split
-    train_cells = np.random.choice(range(len(X)), int(X.shape[0] * (1 - test_frac)), replace=False)
+    train_cells = np.random.choice(range(len(X)), int(X.shape[0] * (1 - args.test_frac)), replace=False)
     chr_boundaries = np.cumsum([np.ceil(seq_dict[c] / args.window) for c in chromosomes])
 
     # Dump output
