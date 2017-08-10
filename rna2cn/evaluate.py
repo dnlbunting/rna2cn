@@ -163,7 +163,7 @@ def evaluate_command(argv):
                 ax1.spines['right'].set_visible(False)
                 ax1.spines['left'].set_visible(False)
                 ax1.spines['bottom'].set_visible(False)
-                plt.title('Cell {0}'.format(i))
+                plt.title('Cell {0} - {1}'.format(i, 'Train' if i in train_cells else 'Test' ))
                 ax1.grid()
 
                 ########## Subplot 2 #############
