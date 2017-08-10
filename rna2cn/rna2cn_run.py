@@ -10,7 +10,7 @@ os.environ['THEANO_FLAGS'] = "openmp=False"
 
 def main():
     main_parser = argparse.ArgumentParser(prog='RNA2CN')
-    main_parser.add_argument('command', choices=['train', 'preprocess', 'predict', 'evaluate'])
+    main_parser.add_argument('command', choices=['train', 'preprocess', 'predict', 'evaluate', 'concatenate'])
 
     main_args = main_parser.parse_args(sys.argv[1:2])
 
@@ -25,6 +25,10 @@ def main():
     elif main_args.command == 'evaluate':
         import rna2cn.evaluate
         rna2cn.evaluate.evaluate_command(sys.argv[2:])
+
+    elif main_args.command == 'concatenate':
+        import rna2cn.concatenate
+        rna2cn.concatenate.concatenate_command(sys.argv[2:])
 
     else:
         print("Yeah I haven't written this yet")
