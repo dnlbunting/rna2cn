@@ -169,9 +169,9 @@ def load_dict(reference, dropchr='MKGYX'):
 def load_CN(cn_path, window, seq_dict):
     profile = fine_bin(pd.read_table(cn_path, header=None).as_matrix(), window, lambda x, n, y: y, seq_dict)
 
-    # Temporary hack: at the centromeres the CN spikes so replace this with -1
+    # Clip high CN
     for i, _ in enumerate(profile):
-        profile[i][profile[i] > 5] = -1
+        profile[i][profile[i] > 5] = 5
 
     return pad_sequences(profile, value=-1, padding='post', dtype='float')
 
