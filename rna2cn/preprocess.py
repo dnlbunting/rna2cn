@@ -133,14 +133,14 @@ def chr_gc(chr, reference, seq_dict, window):
     return gc
 
 
-def load_gc(reference, window, seq_dict, n_jobs):
+def load_gc(reference, window, seq_dict, n_jobs, n_samples):
     # Curry the gc content function with the reference path + window
     f = functools.partial(chr_gc, reference=reference, seq_dict=seq_dict, window=window)
     gc_bins = joblib.Parallel(n_jobs=n_jobs, verbose=1)(joblib.delayed(f)(chr) for chr in chromosomes)
 
     X_gc = np.array(pad_sequences(gc_bins, value=-1, padding='post', dtype='float'))
     X_gc[X_gc > 0] = MinMaxScaler().fit_transform(X_gc[X_gc > 0])
-    X_gc = np.tile(X_gc, (1, 26, 1)).swapaxes(1, 2).swapaxes(0, 2)
+    X_gc = np.tile(X_gc, (1, n_samples, 1)).swapaxes(1, 2).swapaxes(0, 2)
 
     return X_gc
 
@@ -236,7 +236,7 @@ def preprocess_command(argv):
     # GC content
     if args.gc:
         print("Loading GC content")
-        X_gc = load_gc(args.reference, args.window, seq_dict, args.njobs)
+        X_gc = load_gc(args.reference, args.window, seq_dict, args.njobs, n_samples)
         X = np.concatenate([X, X_gc], axis=-1)
 
     # End building up the feature matrix
