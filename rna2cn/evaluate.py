@@ -11,6 +11,8 @@ import pickle
 import numpy as np
 import os
 
+from rna2cn.training import predict
+
 chromosomes = list(map(str, range(1, 23)))  # + ['X']
 sns.set_style('whitegrid')
 
@@ -36,18 +38,6 @@ def getargs(argv):
                         help='Plot the predicted copy number profiles')
 
     return parser.parse_args(argv)
-
-
-def predict(model, X, chr_steps, n_outputs):
-    chroffset = [0] + list(np.cumsum(chr_steps))
-    pred = np.zeros((*X.shape[:-1], n_outputs))
-    for s in range(X.shape[0]):
-        for i, chr in list(enumerate(chromosomes)):
-            model.reset_states()
-            for j in range(chr_steps[i]):
-                x = X[s:s + 1, chroffset[i] + j]
-                pred[s, chroffset[i] + j] = model.predict(x, verbose=0, batch_size=1)
-    return pred
 
 
 def get_breakpoints(y):
@@ -83,6 +73,7 @@ def evaluate_command(argv):
 
     with open(args.model, 'r') as f:
         model = model_from_json(f.read())
+    bs = model.layers[0].output_shape[0]
     print("Loaded model from file " + args.model)
     print(model.summary())
 
@@ -92,11 +83,13 @@ def evaluate_command(argv):
     with open(args.data, 'rb') as f:
         X, Y_oh, mask, train_cells, chr_steps, chr_boundaries, _ = pickle.load(f)
 
+    *_, test_cells = makedata(X, Y_oh, train_cells)
+
     n_cells, n_points, n_outputs = Y_oh.shape[0], Y_oh.shape[2], Y_oh.shape[-1]
     n_features = X.shape[-1]
     Y = Y_oh.argmax(axis=-1)[:, mask].reshape((n_cells, -1))  # Y comes in one hot categorical encoding
 
-    pred = predict(model, X, chr_steps, n_outputs)
+    pred = predict(model, X, chr_steps, bs, n_outputs)
     yhat = pred.argmax(axis=-1)[:, mask].reshape((n_cells, -1))
 
     # Probability of there being a CN != 2 event at this site
