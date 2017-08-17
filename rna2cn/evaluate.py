@@ -106,8 +106,8 @@ def evaluate_command(argv):
     metrics = {k: None for k in args.metrics.split(',')}
 
     if 'accuracy' in metrics.keys():
-        metrics['accuracy'] = sklearn.metrics.accuracy_score(Y.ravel(), yhat.ravel())
-        metrics['mse'] = sklearn.metrics.mean_squared_error(Y.ravel(), yhat.ravel())
+        metrics['accuracy'] = sklearn.metrics.accuracy_score(Y[test_cells].ravel(), yhat[test_cells].ravel())
+        metrics['mse'] = sklearn.metrics.mean_squared_error(Y[test_cells].ravel(), yhat[test_cells].ravel())
 
     if 'events' in metrics.keys():
         metrics['auc'] = sklearn.metrics.roc_auc_score(event_Y.ravel(), event_p.ravel())
@@ -134,7 +134,7 @@ def evaluate_command(argv):
         plt.close()
 
     if args.precision_recall:
-        precision, recall, thresholds = sklearn.metrics.precision_recall_curve(event_Y.ravel(), event_p.ravel())
+        precision, recall, thresholds = sklearn.metrics.precision_recall_curve(event_Y[test_cells].ravel(), event_p[test_cells].ravel())
         plt.plot(precision, recall)
         plt.plot([0, 1], [1, 0], '--', color='gray')
         plt.xlabel("Precision")
@@ -163,7 +163,8 @@ def evaluate_command(argv):
                 ax1.spines['right'].set_visible(False)
                 ax1.spines['left'].set_visible(False)
                 ax1.spines['bottom'].set_visible(False)
-                plt.title('Cell {0} - {1}'.format(i, 'Train' if i in train_cells else 'Test' ))
+                plt.title('Cell {0} - {1} - Acc: {2:.2%}'.format(i, 'Train' if i in train_cells else 'Test',
+                                                                 sklearn.metrics.accuracy_score(Y[i].ravel(), yhat[i].ravel())))
                 ax1.grid()
 
                 ########## Subplot 2 #############
@@ -189,7 +190,7 @@ def evaluate_command(argv):
                 ax3.set_ylabel("Copy number")
                 ax3.get_yaxis().set_label_coords(-0.05, 0.5)
                 ax3.vlines(chr_boundaries, 0, 5, linestyle='dashed', color='gray')
-                ax3.set_ylim((0, n_outputs - 1))
+                ax3.set_ylim((-0.2, n_outputs - 0.8))
                 ax3.set_xlim((0, mask.sum()))
                 ax3.set_yticks([1, 2, 3, 4])
                 ax3.set_yticklabels(['1', '2', '3', '4'])
