@@ -12,5 +12,6 @@ setup(
         'console_scripts': [
             'rna2cn = rna2cn.rna2cn_run:main',
             ]
-        }
+        },
+    install_requires=['numpy', 'keras', 'matplotlib', 'seaborn', 'scikit-learn', 'pandas', 'joblib', 'pyensembl']
 )
