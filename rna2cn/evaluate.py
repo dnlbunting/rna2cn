@@ -29,7 +29,7 @@ def getargs(argv):
                         help='Folder to dump jsons of trained models to', default=None)
     parser.add_argument('--metrics', required=False, type=str,
                         help='Sample metrics to include',
-                        default='accuracy,breakpoints,events')
+                        default='accuracy,breakpoints,events,gainloss')
     parser.add_argument('--confusion', action='store_true',
                         help='Plot the confusion matrix')
     parser.add_argument('--precision-recall', action='store_true',
@@ -70,7 +70,7 @@ def makedata(X, Y, train_cells):
 
 def evaluate_command(argv):
     args = getargs(argv)
-
+    print("USing test")
     with open(args.model, 'r') as f:
         model = model_from_json(f.read())
     bs = model.layers[0].output_shape[0]
@@ -96,6 +96,15 @@ def evaluate_command(argv):
     event_Y = np.where(Y_oh[..., 2], 0, 1)[:, mask]
     event_p = 1 - pred[:, mask, 2].reshape((n_cells, -1))
 
+    # Probability of a gain/loss event
+    gain_p = (pred[:, mask, 3] + pred[:, mask, 4] + pred[:, mask, 5]).reshape((n_cells, -1))
+    loss_p = (pred[:, mask, 0] + pred[:, mask, 1]).reshape((n_cells, -1))
+    normal_p = 1 - gain_p - loss_p
+    gl_p = np.stack([loss_p, normal_p, gain_p], axis=-1)
+    gl_Y = np.ones_like(Y)
+    gl_Y[Y > 2] = 2
+    gl_Y[Y < 2] = 0
+
     metrics = {k: None for k in args.metrics.split(',')}
 
     if 'accuracy' in metrics.keys():
@@ -103,14 +112,12 @@ def evaluate_command(argv):
         metrics['mse'] = sklearn.metrics.mean_squared_error(Y[test_cells].ravel(), yhat[test_cells].ravel())
 
     if 'events' in metrics.keys():
-        metrics['auc'] = sklearn.metrics.roc_auc_score(event_Y.ravel(), event_p.ravel())
-        metrics['event_accuracy'] = sklearn.metrics.accuracy_score(event_Y.ravel(), (event_p > 0.5).ravel())
+        metrics['auc'] = sklearn.metrics.roc_auc_score(event_Y[test_cells].ravel(), event_p[test_cells].ravel())
+        metrics['event_accuracy'] = sklearn.metrics.accuracy_score(event_Y[test_cells].ravel(), (event_p[test_cells] > 0.5).ravel())
 
-    if 'breakpoints' in metrics.keys():
-        dist = int(0.1 * yhat.shape[1])
-        metrics['n_breakpoints'] = np.array([len(get_breakpoints(y)) for y in yhat])
-        # metrics['concordant_breakpoints'] = np.mean([np.abs(get_breakpoints(yh) - get_breakpoints(y)) < dist for yh, y in zip(yhat, Y)])
-        metrics['singletons'] = np.array([len(get_singletons(y)) for y in yhat])
+    if 'gainloss' in metrics.keys():
+        metrics['gainloss'] = sklearn.metrics.accuracy_score(gl_Y[test_cells].ravel(), np.argmax(gl_p[test_cells], axis=-1).ravel())
+
     print(metrics)
 
     if args.confusion:
