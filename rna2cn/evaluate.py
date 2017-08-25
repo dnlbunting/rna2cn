@@ -143,8 +143,10 @@ def evaluate_command(argv):
 
                 ########## Subplot 1 #############
                 ax1 = plt.subplot2grid(gridspec, (0, 0), rowspan=1)
+
                 for j in range(n_outputs):
-                    ax1.plot(Y_oh[i, mask, j].reshape((-1)), 's', linewidth=10)
+                    ax1.fill_between(range(mask.sum()), 0.95, 1.05, where=Y[i] == j)
+
                 ax1.set_ylim((0.95, 1.05))
                 ax1.set_xlim((0, mask.sum()))
                 ax1.set_ylabel("Y", rotation=0, va='center')
@@ -163,7 +165,7 @@ def evaluate_command(argv):
                 for j in range(n_outputs):
                     ax2.plot(pred[i, mask, j].reshape((-1)), label=str(j))
                 ax2.vlines(chr_boundaries, 0, 1, linestyle='dashed', color='gray')
-                ax2.set_ylim((0, 1))
+                ax2.set_ylim((-0.05, 1.05))
                 ax2.set_xlim((0, mask.sum()))
                 ax2.set_ylabel("Pr(CN)")
                 ax2.get_yaxis().set_label_coords(-0.05, 0.5)
