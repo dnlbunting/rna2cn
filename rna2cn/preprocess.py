@@ -125,6 +125,7 @@ def load_expression(path, window, accumulate, seq_dict):
 
 
 def chr_gc(chr, reference, seq_dict, window):
+    '''Calculate GC content for reference for windows of size window'''
     genome = Bio.SeqIO.index(reference, 'fasta')
     chr_bins = {k: list(zip(np.arange(0, v, window, dtype=int), np.concatenate([np.arange(window, v, window, dtype=int), [v + 1]]))) for k, v in seq_dict.items()}
     gc = np.zeros(len(chr_bins[chr]))
@@ -146,7 +147,7 @@ def load_gc(reference, window, seq_dict, n_jobs, n_samples):
 
 
 def load_dict(reference, dropchr='MKGYX'):
-
+    '''Use fasta dict to get chromosome lengths'''
     if os.path.exists(reference + '.dict'):
         dict_path = reference + '.dict'
     elif os.path.exists(reference.rsplit('.', 1)[0] + '.dict'):
@@ -167,6 +168,7 @@ def load_dict(reference, dropchr='MKGYX'):
 
 
 def load_CN(cn_path, window, seq_dict):
+    '''Load the truth copy numbers from BED files'''
     profile = fine_bin(pd.read_table(cn_path, header=None).as_matrix(), window, lambda x, n, y: y, seq_dict)
 
     # Clip high CN
@@ -177,6 +179,14 @@ def load_CN(cn_path, window, seq_dict):
 
 
 def subseq(X, seq_len, ws, seq_dict):
+    '''Splits the genome into subsequences of length seq_len
+       for truncated back propagation through time also making sure
+       that each new chromosome starts a new sequence.
+
+       Also returns a binary mask that can be used to remove the
+       padding and get back the genome seq and the number of subseqs
+       per chromosomes so we can know when to reset the LSTM hidden
+       states between chromosomes'''
 
     n_chr, data = len(chromosomes), []
     for i in range(int(X.shape[0] / n_chr)):
