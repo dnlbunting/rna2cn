@@ -176,7 +176,7 @@ def evaluate_command(argv):
                 ax3 = plt.subplot2grid(gridspec, (7, 0), rowspan=6)
                 for j in range(n_outputs):
                     ax3.fill_between(range(mask.sum()), j-0.15, j+0.15, where=yhat[i] == j, alpha=0.75)
-                ax3.plot(Y[i], '.', color='black', ms=1)
+                ax3.plot(Y[i], '.', color='black', ms=2)
                 #ax3.plot(yhat[i], '.', color='red', ms=1)
                 ax3.set_ylabel("Copy number")
                 ax3.get_yaxis().set_label_coords(-0.05, 0.5)
