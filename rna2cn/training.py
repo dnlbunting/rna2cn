@@ -63,7 +63,8 @@ def make_batches(size, batch_size):
 
 
 def evaluate(model, X, Y, mask, chr_steps, bs):
-    '''Cell-wise evaluation, returns loss, accuracy, MSE'''
+    '''Collapses cells and evaluates predictions from X against truth Y,
+         returns loss, accuracy, MSE. Loss isn't implemented'''
     chroffset = [0] + list(np.cumsum(chr_steps))
     pred = predict(model, X, chr_steps, bs)
     yhat = pred.argmax(axis=-1)[:, mask].reshape((len(X), -1))
@@ -74,6 +75,7 @@ def evaluate(model, X, Y, mask, chr_steps, bs):
 
 
 def predict(model, X, chr_steps, bs, n_out=6):
+    '''Run model and get predictions for an input X'''
     chroffset = [0] + list(np.cumsum(chr_steps))
     pred = np.zeros((*X.shape[:-1], n_out))
     for batch in make_batches(len(X), bs):
