@@ -122,7 +122,19 @@ def plotLearning(model, fout):
 def train(model, n_epochs, X_train, Y_train, X_test, Y_test, mask, chr_steps, out_dir, bs):
     '''Train the model for n_epochs on the provided data.
        Saves hd5s of the model weights to out_dir and updates
-       the learning curve plot every 10 epochs'''
+       the learning curve plot every 10 epochs.
+
+       The training code is quite awkward because the LSTM hidden
+       state is controlled manually, since we want to reset it after
+       each chromosome.
+
+       We also shuffle the order of the cells and the order of the
+       chromosomes within a cell during training. This is key to avoiding
+       just memorising CN profiles for specific samples.
+
+       All chromosomes are stored in the same array axis so chroffset stores
+       an offset to the ith chromosome.
+       '''
     chroffset = [0] + list(np.cumsum(chr_steps))
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
@@ -138,7 +150,7 @@ def train(model, n_epochs, X_train, Y_train, X_test, Y_test, mask, chr_steps, ou
 
         model.history.append(np.concatenate([np.mean(epoch_hist, axis=0), evaluate(model, X_test, Y_test, mask, chr_steps, bs)]))
         print("Epoch {0}: {1:.1f}s".format(len(model.history), time.time() - epoch_start))
-        print('-'*20)
+        print('-' * 20)
         print("Train Accuracy: {0:.2%}, Train MSE: {1:.2f}".format(model.history[-1][1], model.history[-1][2]))
         print("Test Accuracy: {0:.2%}, Test MSE: {1:.2f}\n".format(model.history[-1][4], model.history[-1][5]))
 
