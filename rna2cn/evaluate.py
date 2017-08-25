@@ -40,23 +40,6 @@ def getargs(argv):
     return parser.parse_args(argv)
 
 
-def get_breakpoints(y):
-    events = []
-    for i, x in enumerate(y):
-        if i != 0 and y[i] != y[i - 1]:
-            events.append(i)
-    return np.array(events)
-
-
-def get_singletons(y):
-    singletons = []
-    for i, x in enumerate(y):
-        if i != 0 and y[i] != y[i - 1]:
-            if i != len(y) - 1 and y[i + 1] != y[i]:
-                singletons.append(i)
-    return np.array(singletons)
-
-
 def makedata(X, Y, train_cells):
     '''Split X,Y cellwise into train and test sets,
        returns (X_train, Y_train, X_test, Y_test, test_cells)'''
@@ -70,16 +53,19 @@ def makedata(X, Y, train_cells):
 
 def evaluate_command(argv):
     args = getargs(argv)
-    print("USing test")
+
+    # Load the model structure from JSON
     with open(args.model, 'r') as f:
         model = model_from_json(f.read())
     bs = model.layers[0].output_shape[0]
     print("Loaded model from file " + args.model)
     print(model.summary())
 
+    # Load the trained model weights
     model.load_weights(args.weights)
     print("Loaded weights from " + args.weights)
 
+    # Load the raw data
     with open(args.data, 'rb') as f:
         X, Y_oh, mask, train_cells, chr_steps, chr_boundaries, _ = pickle.load(f)
 
@@ -89,7 +75,9 @@ def evaluate_command(argv):
     n_features = X.shape[-1]
     Y = Y_oh.argmax(axis=-1)[:, mask].reshape((n_cells, -1))  # Y comes in one hot categorical encoding
 
+    # Model prediction probabilities
     pred = predict(model, X, chr_steps, bs, n_outputs)
+    # CN call is the most likely state
     yhat = pred.argmax(axis=-1)[:, mask].reshape((n_cells, -1))
 
     # Probability of there being a CN != 2 event at this site
@@ -121,6 +109,7 @@ def evaluate_command(argv):
     print(metrics)
 
     if args.confusion:
+        # Plot the confusion matrix
         confusion = sklearn.metrics.confusion_matrix(Y.ravel(), yhat.ravel())
         confusion = (confusion / confusion.sum(axis=0))
 
@@ -134,6 +123,7 @@ def evaluate_command(argv):
         plt.close()
 
     if args.precision_recall:
+        # Plot the binary precision recall curve
         precision, recall, thresholds = sklearn.metrics.precision_recall_curve(event_Y[test_cells].ravel(), event_p[test_cells].ravel())
         plt.plot(precision, recall)
         plt.plot([0, 1], [1, 0], '--', color='gray')
@@ -144,6 +134,7 @@ def evaluate_command(argv):
         plt.close()
 
     if args.plot:
+        # Make the full output plot
         with PdfPages(os.path.join(args.output, 'profiles.pdf')) as pdf:
             for i in range(n_cells):
 
@@ -219,6 +210,7 @@ def evaluate_command(argv):
                 pdf.savefig()
                 plt.close()
 
+        # Plots the input channel
         with PdfPages(os.path.join(args.output, 'input_channels.pdf')) as pdf:
             for i in range(n_cells):
 
